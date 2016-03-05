@@ -1,0 +1,45 @@
+GRAPHES:
+
+graphe:
+formé de sommet et jonctions entre certains des sommets(arrete pour non oriente ou arcs pour graphes oriente : parcours a sens unique).
+
+
+Graphes simples :
+-pas de double arete 
+-pas d'arete qui par et revient au meme noeud
+
+Comment entrer le graphe sur ordi ?
+on se donne NS le nb de noeuds
+
+
+On fait les listes d'adjacent pour chaque noeud 
+donc 0->1,2
+     1->0,2,4
+     2->0,1,3
+     etc...
+
+Structure tableau ou list 
+int v[NS][NS]
+v[0][0]=1; 
+v[1][0]=0;v[0][1]=2;v[1][1]=2;v[1][2]=4;
+nbv[0]=2 ; 
+nbv[1]=3 ;
+
+on s'interesse uniquement au chemin elementaire :
+   pas deux passage sur un meme noeud 
+   pas de cycle 
+
+parcours simple 
+
+0
+	1
+		2
+			4
+				3
+					5
+			5
+		3
+		4
+	2
+		1
+		4

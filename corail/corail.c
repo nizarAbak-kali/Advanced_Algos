@@ -1,0 +1,153 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<SDL/SDL.h>
+#include<math.h>
+
+
+#define SIZE_X 800
+#define SIZE_Y 600
+
+
+int square(int i){ return i*i;}
+
+//Met un pixel à l'écran
+void putpixel(SDL_Surface *screen,int x, int y, Uint32 c) { 
+  Uint32 * numerocase;
+  numerocase = (Uint32 *)(screen->pixels)+x+y*screen->w; 
+  *numerocase = c;
+}
+
+
+//Donne la couleur d'un pixel
+Uint32 getpixel(SDL_Surface *screen,int x, int y) {
+  Uint32 * numerocase;
+  numerocase= (Uint32 *)(screen->pixels)+x+y*screen->w; 
+  return (*numerocase);
+}
+
+void filldisc(SDL_Surface *screen,int xo, int yo, int R, Uint32 c) {
+  int x, y, F, F1, F2,newx,newy,xx;
+  x=xo; 
+  y=yo+R; 
+  F=0;
+  if (x<800 && x>=0 && y>=0 && y<600) 
+    putpixel(screen , x , y ,c);
+  
+  if ((x<800) && (x>=0) && (2*yo-y>=0) && (2*yo-y<600)) 
+    putpixel(screen , x , (2*yo-y) , c);
+  
+  while( y > yo ) {
+    F1=F+2*(x-xo)+1;  
+    F2=F-2*(y-yo)+1;
+    if (abs(F1)<abs(F2)) 
+      { x+=1; F=F1;}
+    else 
+      {y-=1; F=F2;}
+    newx= 2*xo-x ; 
+    newy= 2*yo-y ;
+    for(xx=newx; xx<=x; xx++)
+      if (xx<800 && xx>=0 && y>=0 && y<600 )
+	putpixel(screen,xx,y,c);
+    for(xx=newx; xx<=x; xx++)
+      if (xx<800 && xx>=0 && newy>=0 && newy<600 )
+	putpixel(screen,xx,newy,c);
+  }
+  if (xo+R<800 && xo+R>=0&& y>=0 && y<600)
+    putpixel(screen,xo+R,yo,c);
+  if (xo-R<800 && xo-R>=0&& y>=0 && y<600) 
+    putpixel(screen,xo-R,yo, c);
+}
+
+
+void corail(SDL_Surface *ecran){
+  int r1,r2,rp;
+  Uint32 noir = SDL_MapRGB(ecran->format,0,0,0);
+  Uint32 rouge=SDL_MapRGB(ecran->format,255,0,0);
+  r1=40;
+  int angled;
+  float angler;
+  int xorg=SIZE_X/2;
+  int yorg=SIZE_Y/2;
+  int x,y,oldx,oldy,h,d2;
+
+  filldisc(ecran,xorg,yorg,3,noir);
+  while(r1<280)
+    {
+      r2 = r1 + 20;
+      rp = r1 + rand()%(r2-r1);
+      angled = rand()%360;
+      angler = (M_PI*(float)angled)/180;
+      
+      x = xorg + (rp * cos(angler));
+      y = yorg + (rp * sin(angler));
+      putpixel(ecran,x,y,rouge);
+      for(;;){
+	oldx=x;
+	oldy=y;
+	h=rand()%4;
+	switch(h){
+	case 0:
+	  x++;
+	  break;
+	case 1:
+	  y++;
+	  break;
+	case 2:
+	  x--;
+	  break;
+	case 3:
+	  y--;
+	  break;
+	default :
+	  break;
+	}
+	d2=square((x-xorg))+square(y-yorg);
+	//ici
+	if(d2>square(r1-5))
+	  r1+=20;
+	if(d2>square(r2))
+	  break;
+	
+	if(getpixel(ecran,x,y)==noir){  
+	  putpixel(ecran,oldx,oldy,noir);
+	  break;
+	}
+      }
+    }
+}
+
+
+
+
+
+
+int main (int a,char **v){
+  
+  SDL_Init(SDL_INIT_VIDEO);
+  
+  SDL_Surface *ecran=NULL;
+  SDL_Event event;
+  int continuer=1;
+  
+  ecran=SDL_SetVideoMode(800,600,32,SDL_HWSURFACE | SDL_DOUBLEBUF);
+  SDL_WM_SetCaption("Formation Corail",NULL);
+  SDL_FillRect(ecran,NULL,SDL_MapRGB(ecran->format,255,255,255));
+  
+
+  while(continuer)
+    {
+      SDL_PollEvent(&event);
+      switch(event.type)
+	{
+	case SDL_QUIT:
+	case SDLK_ESCAPE:
+	  continuer=0;
+	  break;
+	}
+      corail(ecran);
+      SDL_Flip(ecran);
+    }
+  SDL_Quit();
+
+  return 0;
+}

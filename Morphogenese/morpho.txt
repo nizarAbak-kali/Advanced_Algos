@@ -1,0 +1,35 @@
+Morphogenese: peaux d'animaux
+
+2 types de cellules 
+CA colorées active couleur[0]=rouge
+CN colorées neutre couleur[0]=jaune
+
+
+les CA sont actives de façons : 
+    ->dans un voisinage proche d'elles elles transforme  les CN en CA dans un voisinage lointain elles transforme les CA en CN  
+
+Les rayon autour d'une cellule 
+
+soit R1 = 2
+et R2= 6
+la cellule centrale est considere comme recepteur 
+
+
+dans petit carre de rayon R1 on a n cellules actives
+dans le grands n'
+Si cellule centrale est CN ,les CA du petit voisinage ont tendance a la rendre active
+Si cellule centrale est CA ,les CA du petit voisinage ont tendance a la transformer en CN
+
+On introduit  2 parametres :
+   W=1
+   W'=-0.2
+On calcule W=n*W+n'*W'
+
+
+Si W>0 --> CN centrale -> CA
+       	   CA centrale -> CA
+si W=0 on fait rien 
+si W<0 --> CA centrale -> CA
+       	   CN centrale -> CN
+
+

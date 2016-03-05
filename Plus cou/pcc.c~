@@ -1,0 +1,94 @@
+/*
+Algorithmique Avancée L3 - 2013/2014
+Nom : Nouira
+Prénom : Chafik
+N° étudiant : 11291558
+Programme : Plus Courts Chemins - Séance du 22 novembre 2013
+*/
+#include <time.h>
+#include "bibosdl.h"
+#define N 5
+#define MAX 1000000000
+
+/* Initialisation du graphe et de la matrice des distances */
+int depart = 1;
+int xe[N+1] = {300, 150, 300, 450,400, 200};
+int ye[N+1] = {50, 200, 200, 200, 400, 400};
+
+int C[N+1][N+1] = {{0}};
+int P[N+1][N+1] = {{MAX, MAX, MAX, MAX, MAX, MAX},
+		  {MAX, 0, 1, MAX, MAX, 10},
+		  {MAX, 5, 0, 1, MAX, MAX},
+		  {MAX, MAX, 5, 0, 1, MAX},
+		  {MAX, MAX, MAX, MAX, 0,1},
+		  {MAX, 10, MAX, MAX, MAX, 0}
+};
+Uint32 color[10]; //Tableau contenant les couleurs
+
+void initialisation(SDL_Surface *ecran){
+  int i, j, k, cpt = 1; 
+  /* Affichage du graphe initial */
+  for(i = 1; i <= N; i++)
+    for(j = 1; j <= N; j++){
+      if(P[i][j] != 0&& P[i][j] != MAX)  
+	arrow(ecran, xe[i], ye[i], xe[j], ye[j], color[cpt]);
+      SDL_Flip(ecran);
+      cpt++;
+    }
+  pause();
+  SDL_FillRect(ecran, NULL, color[0]);
+  /* Les plus courts chemins entre 2 sommets */
+  for(k = 1; k <= N; k++)
+    for(i = 1; i <= N; i++)
+      for(j = 1; j <= N; j++)
+	if(P[i][k] + P[k][j] < P[i][j]){
+	  P[i][j] = P[i][k] + P[k][j];
+	  C[i][j] = k;
+	}
+  /* Affichage de la matrice finale des distance dans le terminal */
+  printf("\n--------------------\n");
+  for(i = 1; i <= N; i++){
+    for(j = 1; j <= N; j++)
+      printf("%d  |", C[i][j]);
+    printf("\n--------------------\n");
+  }
+  printf("\n");
+  arrow(ecran, xe[1], ye[1], xe[2], ye[2], color[1]);
+}
+
+void pluscourtschemins(SDL_Surface *ecran, int i, int j){
+  int noeud = C[i][j];
+  if(noeud != 0){
+    pluscourtschemins(ecran, i, noeud);
+    arrow(ecran, xe[noeud], ye[noeud], xe[j], ye[j], color[1]);
+    pluscourtschemins(ecran, noeud, j);
+  }
+}
+
+int main() {
+  srand(time(NULL));
+  SDL_Surface *ecran; 
+
+  SDL_Init(SDL_INIT_VIDEO);
+  ecran = SDL_SetVideoMode(800, 600, 32, SDL_HWSURFACE|SDL_DOUBLEBUF);
+  /* Initialisation du tableau de couleurs */
+  color[0] = SDL_MapRGB(ecran->format,255,255,255);
+  color[1] = SDL_MapRGB(ecran->format,0,0,0);
+  color[2] = SDL_MapRGB(ecran->format,255,0,0);
+  color[3] = SDL_MapRGB(ecran->format,250,0,255);
+  color[4] = SDL_MapRGB(ecran->format,250,255,0);
+  color[5] = SDL_MapRGB(ecran->format,0,0,255);
+  color[6] = SDL_MapRGB(ecran->format,25,25,80);
+  color[7] = SDL_MapRGB(ecran->format,150,150,150);
+
+  SDL_FillRect(ecran, NULL, color[0]);
+  SDL_Flip(ecran);
+  SDL_WM_SetCaption("Plus Courts Chemins", NULL);
+  
+  initialisation(ecran);
+  pluscourtschemins(ecran, 1, 5);
+  SDL_Flip(ecran);
+  pause();
+  SDL_Quit();
+  return EXIT_SUCCESS;
+}

@@ -1,0 +1,317 @@
+//EL KHADEM Amir 255324
+
+#include<stdlib.h>
+#include<stdio.h>
+#include<SDL/SDL.h>
+#include<time.h>
+#include<math.h>
+#define L 10
+#define pas 50
+#define OUI 1
+#define NON 0
+
+SDL_Surface * screen;
+
+Uint32 noir,noir, rouge, jaune;
+
+int dir,x, y, xe, ye, new_xe, new_ye, new_dir,droite, devant, gauche, dxdroite, dxdevant, dxgauche, dydroite, dydevant, dygauche, dx, dy, xde, yde, fini;
+int q = 5;
+int xarrivee, yarrivee;
+
+
+void putpixel(int x , int y , Uint32 c);
+Uint32 getpixel(int x, int y);
+int appartient_liste_pred(int, int);
+void graphe();
+void dessine_graphe();
+void chemin(int, int);
+void filldisc(int, int, int, Uint32);
+void line(int, int, int, int, Uint32);
+void linewithwidth(int, int, int, int, int, Uint32);
+void pause();
+void carre(int, int, int, Uint32);
+void rectangle(int, int, int, int, Uint32);
+
+
+
+int main(){
+ 
+ //fenetre
+  SDL_Init(SDL_INIT_VIDEO);
+  screen = SDL_SetVideoMode(800, 600, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
+  SDL_WM_SetCaption("Labyrinthe by EL KHADEM Amir", NULL);
+  
+  //Couleurs 
+  Uint32 blanc = SDL_MapRGB(screen->format, 255,255,255);
+  Uint32 noir = SDL_MapRGB(screen->format, 0,0,2);
+  Uint32 rouge = SDL_MapRGB(screen->format, 255,0,0);
+  Uint32 jaune = SDL_MapRGB(screen->format, 255,255,0);
+  Uint32 rouge_arrivee = SDL_MapRGB(screen->format, 255,20,20);
+  SDL_FillRect(screen, NULL, blanc);
+  
+  rectangle(0, 0, pas*L, pas*L, noir);
+ 
+  
+  srand(time(NULL));
+  
+  for(;;){
+    fini = OUI;
+    for(x = 0; x <= L; x++)
+      for(y = 0; y <= L; y++)
+	if(getpixel(pas*x, pas*y) == blanc){
+	  fini = NON;
+	  break;
+	}
+    if(fini == OUI)
+      break;
+    else {
+      do{
+	x = rand()%L;
+	y = rand()%L;
+      }
+      while(getpixel(pas*x, pas*y)==  noir); 
+    }
+
+  
+    dir = rand()%4;
+    dx = ((dir+1)%2)*(1-dir);
+    dy = (dir%2)*(dir-2);
+    
+    if(getpixel(pas*(x+dx), pas*(y+dy)) == noir){      
+      linewithwidth(pas*x, pas*y, pas*(x+dx), pas*(y+dy), 3, noir);
+    }
+  }
+  SDL_Flip(screen);
+  pause();
+   
+  xe = pas/2;
+  ye = pas/2;
+  dir = 3;
+
+  carre(xe, ye, q, rouge);
+
+  xarrivee = pas*L-(pas/2);
+  yarrivee = pas*L-(pas/2);
+
+  carre(xarrivee, yarrivee, q, rouge_arrivee);
+  SDL_Flip(screen);
+  pause();
+
+  for(;;){
+    droite = (dir+3)%4;     
+    dxdroite = ((droite+1)%2)*(1-droite)*pas; 
+    dydroite = ((droite%2)*(droite-2))*pas;
+
+    devant = dir;
+    dxdevant = ((devant+1)%2)*(1-devant)*pas; 
+    dydevant = ((devant%2)*(devant-2))*pas;
+
+    gauche = (dir+1)%4;
+    dxgauche = ((gauche+1)%2)*(1-gauche)*pas; 
+    dygauche = ((gauche%2)*(gauche-2))*pas;
+    
+    if(getpixel((xe+dxdroite/2),(ye+dydroite/2)) == blanc)
+      {
+      new_xe = xe + dxdroite;
+      new_ye = ye + dydroite;
+      new_dir = droite;
+      }
+    else if(getpixel((xe+dxdevant/2),(ye+dydevant/2)) == blanc)
+      {
+      new_xe = xe + dxdevant;
+      new_ye = ye + dydevant;
+      new_dir = devant;
+    }
+    else if(getpixel((xe+dxgauche/2), (ye+dygauche/2)) == blanc)
+      {
+      new_xe = xe + dxgauche;
+      new_ye = ye + dygauche;
+      new_dir = gauche;
+      } 
+    else
+      {
+      new_xe = xe;
+      new_ye = ye;
+      new_dir = (dir+2)%4;
+    }
+    if(getpixel(new_xe, new_ye) == rouge_arrivee)    
+      break;
+    
+    if(getpixel(new_xe, new_ye) == rouge)
+      {
+      carre(new_xe, new_ye, q, jaune);
+      carre(xe, ye, q, blanc);
+    }
+    else
+      {
+      carre(new_xe, new_ye, q, jaune);
+      carre(xe, ye, q, rouge);
+      }
+    SDL_Flip(screen);
+    SDL_Delay(50);
+
+    xe = new_xe;
+    ye = new_ye;
+    dir = new_dir;
+  } 
+  pause();
+  return 0;
+}
+
+void carre(int xe, int ye, int q, Uint32 c){
+  int i, j;
+  for(i = xe-(pas/q);i < xe+(pas/q); i++)
+    for(j = ye-(pas/q);j < ye+(pas/q); j++)
+      putpixel(i, j, c);
+}
+
+
+void putpixel(int xe, int ye, Uint32 c){
+  Uint32 * numerocase;
+  numerocase= (Uint32 *)(screen->pixels)+xe+ye*screen->w;
+  *numerocase=c;
+}
+
+
+void line(int x0,int y0, int x1,int y1, Uint32 c){
+  int dx,dy,x,y,residu,absdx,absdy,stepx,stepy,i;
+  dx=x1-x0; dy=y1-y0; residu=0;
+  x=x0;y=y0; putpixel(x,y,c);
+  if(dx>0) 
+    stepx=1;
+  else
+    stepx=-1; 
+  if(dy>0) 
+    stepy=1; 
+  else
+    stepy=-1;
+  absdx=abs(dx);absdy=abs(dy);
+  if (dx==0)
+    for(i=0;i<absdy;i++){
+      y+=stepy;
+      putpixel(x,y,c); 
+    }
+  else
+    if(dy==0)
+      for(i=0;i<absdx;i++){ 
+      x+=stepx;
+      putpixel(x,y,c); 
+    }
+    else
+      if(absdx==absdy)
+    for(i=0;i<absdx;i++) {
+      x+=stepx;
+      y+=stepy;
+      putpixel(x,y,c);
+    }
+      else
+	if(absdx>absdy)
+    for(i=0;i<absdx;i++){
+      x+=stepx;
+      residu+=absdy;
+      if(residu >= absdx){
+	residu -=absdx;
+	y+=stepy;
+      }
+      putpixel(x,y,c);
+    }
+	else
+	  for(i=0;i<absdy;i++){
+	    y+=stepy;residu +=absdx;
+	    if(residu>=absdy){
+	      residu -= absdy;
+	      x +=stepx;
+	    }
+	    putpixel(x,y,c);
+	  }
+}
+
+void linewithwidth(int x1, int y1, int x2, int y2, int width,Uint32 c){
+  int dx,dy;
+  float k,xf1,yf1,xf2,yf2,d,dx1,dy1,ndx1,ndy1,ndx2,ndy2,angle=M_PI/2.0;
+  line(x1,y1,x2,y2,c);
+  dx=x2-x1;
+  dy=y2-y1;
+  d=sqrt(dx*dx+dy*dy);
+  if (d!=0.){
+    /* si le vecteur n’est pas nul */ 
+    dx1=(float)width*(float)dx/d; dy1=(float)width*(float)dy/d;
+    ndx1=dx1*cos(angle)-dy1*sin(angle);
+    ndy1=dx1*sin(angle)+dy1*cos(angle);
+    ndx2=dx1*cos(-angle)-dy1*sin(-angle);
+    ndy2=dx1*sin(-angle)+dy1*cos(-angle);
+    for(k=0;k<=1.;k+=0.1/d){
+      xf1=(1.-k)*x1+k*x2;
+      yf1=(1.-k)*y1+k*y2;
+      xf2=xf1-ndx1;
+      yf2=yf1-ndy1;
+      line(xf1,yf1,xf2,yf2,c);
+      xf2=xf1-ndx2;
+      yf2=yf1-ndy2;
+      line(xf1,yf1,xf2,yf2,c);
+    }
+  }
+}
+
+void filldisc(int xo, int yo, int R, Uint32 c){
+  int x, y, F, F1, F2,newx,newy,xx;
+  x=xo;
+  y=yo+R;
+  F=0;
+  if (x<800 && x>=0 && y>=0 && y<600)
+    putpixel(x,y,c);
+  if (x<800 && x>=0 && 2*yo-y>=0 && 2*yo-y<600)
+    putpixel (x,2*yo-y, c);
+  while( y>yo){
+    F1=F+2*(x-xo)+1;
+    F2=F-2*(y-yo)+1;
+      if ( abs(F1)<abs(F2)) {
+	x+=1;
+	F=F1;
+      }
+      else {
+	y-=1;
+	F=F2;
+      }
+      newx=2*xo-x ;
+      newy=2*yo-y ;
+      for(xx=newx; xx<=x; xx++)
+	if (xx<800 &&xx>=0 && y>=0 && y<600 )
+	  putpixel(xx,y,c);
+      for(xx=newx; xx<=x; xx++)
+	if (xx<800 &&xx>=0 && newy>=0 && newy<600 )
+	  putpixel(xx,newy,c);
+  }
+  if (xo+R<800 && xo+R>=0&& y>=0 && y<600)
+    putpixel(xo+R,yo,c);
+  if (xo-R<800 && xo-R>=0&& y>=0 && y<600)
+    putpixel(xo-R,yo, c);
+}
+
+Uint32 getpixel(int xe, int ye){
+  Uint32 * numerocase;
+  numerocase= (Uint32 *)(screen->pixels)+xe+ye*screen->w; 
+  return (*numerocase);
+} 
+void rectangle(int x1,int y1, int x2, int y2, Uint32 c)
+{
+  linewithwidth(x1,y1+1,x2,y1+1,1,c);
+  linewithwidth(x1,y2+1,x2,y2+1,1,c);
+  linewithwidth(x1+1,y1,x1+1,y2,1,c);
+  linewithwidth(x2,y2,x2,y1,1,c);
+  linewithwidth(x2,y2,x2,y1,1,c);
+  line(x1,y1,x2,y1,c);
+  line(x1,y2,x2,y2,c);
+  line(x1,y1,x1,y2,c);
+  line(x2,y2,x2,y1,c);
+ 
+
+
+}
+void pause(){
+  SDL_Event evenement;
+  do
+    SDL_WaitEvent(&evenement);
+  while
+    (evenement.type != SDL_QUIT && evenement.type != SDL_KEYDOWN);
+}
